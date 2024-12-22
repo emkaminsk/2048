@@ -1,4 +1,6 @@
-Run with Gunicorn
+#Installation
+
+## Run with Gunicorn
 
 ```bash
 gunicorn -w 4 -b 0.0.0.0:8000 app:app
@@ -10,6 +12,7 @@ For production deployment, create a systemd service (on Ubuntu/Debian):
 sudo nano /etc/systemd/system/myapp.service
 ```
 
+```bash
 [Unit]
 Description=Gunicorn instance to serve 2048 app
 After=network.target
@@ -24,14 +27,14 @@ ExecStart=/path/to/your/venv/bin/gunicorn -w 4 -b 0.0.0.0:8000 app:app
 WantedBy=multi-user.target
 ```
 
-Start and enable the service:
+## Start and enable the service:
 
 ```bash
 sudo systemctl start myapp
 sudo systemctl enable myapp
 ```
 
-Create Nginx configuration:
+## Create Nginx configuration:
 
 ```bash
 sudo nano /etc/nginx/sites-available/2048
