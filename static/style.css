@@ -84,4 +84,51 @@ button:hover {
 .tile-256 { background-color: #edcc61; color: #f9f6f2; font-size: 32px; }
 .tile-512 { background-color: #edc850; color: #f9f6f2; font-size: 32px; }
 .tile-1024 { background-color: #edc53f; color: #f9f6f2; font-size: 28px; }
-.tile-2048 { background-color: #edc22e; color: #f9f6f2; font-size: 28px; } 
+.tile-2048 { background-color: #edc22e; color: #f9f6f2; font-size: 28px; }
+
+.home-link {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    z-index: 1000;
+}
+
+.home-link a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    color: #776e65;
+    text-decoration: none;
+}
+
+.home-link a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    color: #8f7a66;
+}
+
+.home-link i {
+    font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .home-link {
+        top: 1rem;
+        left: 1rem;
+    }
+    
+    .home-link a {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    .home-link i {
+        font-size: 1.2rem;
+    }
+} 

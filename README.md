@@ -1,4 +1,4 @@
-#Installation
+# Installation
 
 ## Run with Gunicorn
 
@@ -9,7 +9,7 @@ gunicorn -w 4 -b 0.0.0.0:8000 app:app
 For production deployment, create a systemd service (on Ubuntu/Debian):
 
 ```bash
-sudo nano /etc/systemd/system/myapp.service
+sudo nano /etc/systemd/system/2048.service
 ```
 
 ```bash
