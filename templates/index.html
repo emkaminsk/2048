@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2048 Game</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" onload="console.log('CSS loaded')" onerror="console.log('CSS failed to load')">
 </head>
 <body>
     <div class="home-link">
