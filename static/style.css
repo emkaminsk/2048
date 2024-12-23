@@ -11,6 +11,10 @@ body {
     align-items: center;
     min-height: 100vh;
     background-color: #faf8ef;
+    position: relative !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
 }
 
 .container {
@@ -86,26 +90,28 @@ button:hover {
 .tile-1024 { background-color: #edc53f; color: #f9f6f2; font-size: 28px; }
 .tile-2048 { background-color: #edc22e; color: #f9f6f2; font-size: 28px; }
 
-.home-link {
-    position: fixed;
-    top: 2rem;
-    left: 2rem;
-    z-index: 1000;
+body > .home-link {
+    position: fixed !important;
+    top: 2rem !important;
+    left: 2rem !important;
+    z-index: 1000 !important;
+    outline: 2px solid red !important; /* Debug outline */
 }
 
-.home-link a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    background-color: #fff;
-    border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    color: #776e65;
-    text-decoration: none;
-    font-size: 1.5rem;
+body > .home-link > a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 3rem !important;
+    height: 3rem !important;
+    background-color: #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease !important;
+    color: #776e65 !important;
+    text-decoration: none !important;
+    font-size: 1.5rem !important;
+    outline: 2px solid blue !important; /* Debug outline */
 }
 
 .home-link a:hover {
