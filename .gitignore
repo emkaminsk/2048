@@ -1,3 +1,4 @@
 __pycache__
 .catestenv
-2048.nginx.conf
+*nginx.conf
+*.bak
