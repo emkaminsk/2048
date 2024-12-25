@@ -4,18 +4,6 @@
     padding: 0;
 }
 
-/* Debug marker */
-body::before {
-    content: 'CSS LOADED';
-    position: fixed;
-    top: 0;
-    right: 0;
-    background: red;
-    color: white;
-    padding: 5px;
-    z-index: 9999;
-}
-
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -107,7 +95,6 @@ body > .home-link {
     top: 2rem !important;
     left: 2rem !important;
     z-index: 1000 !important;
-    outline: 2px solid red !important; /* Debug outline */
 }
 
 body > .home-link > a {
@@ -123,11 +110,6 @@ body > .home-link > a {
     color: #776e65 !important;
     text-decoration: none !important;
     font-size: 1.5rem !important;
-    outline: 2px solid blue !important; /* Debug outline */
-    position: relative !important;
-    transform: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }
 
 .home-link a:hover {
