@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>2048 Game</title>
     <link rel="stylesheet" href="/all.min.css">
     <link rel="stylesheet" href="/style.css">
@@ -20,6 +20,13 @@
             <div class="grid"></div>
         </div>
         <button id="new-game">New Game</button>
+    </div>
+    <div id="game-over-overlay" class="game-over-overlay hidden">
+        <div class="game-over-modal">
+            <h2>Game Over!</h2>
+            <p>Score: <span id="final-score">0</span></p>
+            <button id="play-again">Play Again</button>
+        </div>
     </div>
     <script src="/game.js"></script>
 </body>

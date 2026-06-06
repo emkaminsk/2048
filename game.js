@@ -25,6 +25,44 @@ class Game2048 {
     setupEventListeners() {
         document.addEventListener('keydown', (e) => this.handleInput(e));
         document.getElementById('new-game').addEventListener('click', () => this.resetGame());
+        document.getElementById('play-again').addEventListener('click', () => {
+            document.getElementById('game-over-overlay').classList.add('hidden');
+            this.resetGame();
+        });
+        this.setupTouchListeners();
+    }
+
+    setupTouchListeners() {
+        const board = document.querySelector('.grid-container');
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        board.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        board.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+
+            if (Math.max(Math.abs(dx), Math.abs(dy)) < 30) return;
+
+            let moved = false;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                moved = dx > 0 ? this.moveRight() : this.moveLeft();
+            } else {
+                moved = dy > 0 ? this.moveDown() : this.moveUp();
+            }
+
+            if (moved) {
+                this.addNewTile();
+                this.updateGrid();
+                if (this.isGameOver()) {
+                    this.showGameOver();
+                }
+            }
+        }, { passive: true });
     }
 
     handleInput(e) {
@@ -50,9 +88,14 @@ class Game2048 {
             this.addNewTile();
             this.updateGrid();
             if (this.isGameOver()) {
-                alert('Game Over! Your score: ' + this.score);
+                this.showGameOver();
             }
         }
+    }
+
+    showGameOver() {
+        document.getElementById('final-score').textContent = this.score;
+        document.getElementById('game-over-overlay').classList.remove('hidden');
     }
 
     moveLeft() {
