@@ -85,3 +85,53 @@ sudo systemctl restart nginx
 sudo systemctl restart game2048
 ```
 
+## GitHub Actions automation
+
+Now here's how to set up the SSH key and secrets:
+
+  ---
+  Step 1 — Generate a dedicated SSH key on the VPS
+  
+  Run this on your VPS (not your laptop):
+
+  ssh-keygen -t ed25519 -C "github-actions-2048" -f ~/.ssh/github_actions_2048 -N ""
+
+  This creates two files:
+  - ~/.ssh/github_actions_2048 — private key (goes into GitHub)
+  - ~/.ssh/github_actions_2048.pub — public key (stays on VPS)
+  
+  Step 2 — Authorize the public key on the VPS
+
+  cat ~/.ssh/github_actions_2048.pub >> ~/.ssh/authorized_keys
+  chmod 600 ~/.ssh/authorized_keys
+
+  Step 3 — Allow *** to restart the service without a password
+
+  Since the deploy script runs sudo systemctl restart game2048.service, add a
+  passwordless sudoers rule:
+
+  echo "*** ALL=(ALL) NOPASSWD: /bin/systemctl restart game2048.service" | sudo tee /etc/sudoers.d/github-actions-2048
+  sudo chmod 440 /etc/sudoers.d/github-actions-2048
+
+  Step 4 — Copy the private key
+
+  cat ~/.ssh/github_actions_2048
+
+  Copy the entire output (including the -----BEGIN... and -----END... lines).
+
+  Step 5 — Add secrets to GitHub
+
+  Go to: github.com → your 2048 repo → Settings → Secrets and variables → Actions → New 
+  repository secret
+
+  Add these three secrets:
+
+  ┌──────────────┬─────────────────────────────────────────────────┐
+  │     Name     │                      Value                      │
+  ├──────────────┼─────────────────────────────────────────────────┤
+  │ VPS_HOST     │ your VPS IP or hostname (e.g. abc.example.com) │
+  ├──────────────┼─────────────────────────────────────────────────┤
+  │ VPS_USERNAME │ ***                                          │
+  ├──────────────┼─────────────────────────────────────────────────┤
+  │ VPS_SSH_KEY  │ the private key you copied in Step 4            │
+  └──────────────┴─────────────────────────────────────────────────┘
