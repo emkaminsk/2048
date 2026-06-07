@@ -1,0 +1,8 @@
+# Level 3 – Checkerboard
+# Half the tiles, twice the effort
+R.R.R.R.R.
+.O.O.O.O.O
+Y.Y.Y.Y.Y.
+.G.G.G.G.G
+B.B.B.B.B.
+.P.P.P.P.P

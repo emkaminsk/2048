@@ -1,0 +1,9 @@
+# Level 5 – Invader
+# Classic space-invader silhouette
+..PPPPPP..
+.PPPPPPPP.
+PPPPPPPPPP
+PP.PPPP.PP
+.PPPPPPPP.
+..PP..PP..
+.P......P.

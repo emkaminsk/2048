@@ -1,11 +1,9 @@
 'use strict';
 
-const COLS = 10;
-const ROWS = 6;
 const TILE_W = 32;
 const TILE_H = 14;
 const TILE_GAP = 3;
-const TILE_OFF_X = (360 - (COLS * TILE_W + (COLS - 1) * TILE_GAP)) / 2; // 9
+const TILE_OFF_X = (360 - (10 * TILE_W + 9 * TILE_GAP)) / 2;
 const TILE_OFF_Y = 40;
 
 const PADDLE_Y = 450;
@@ -19,17 +17,28 @@ const BALL_MAX_SPEED = 8.8;
 const WIDE_DURATION = 30000; // ms
 const LIVES_START = 3;
 
-// bonus drop probabilities per tile destroyed
-const PROB_WIDE  = 0.007; // 0.7%
-const PROB_LIFE  = 0.005; // 0.5%
+const PROB_WIDE = 0.007;
+const PROB_LIFE = 0.005;
 
-const TILE_COLORS = [
-    ['#ff1744', '#ff6090'], // row 0 – red
-    ['#ff6d00', '#ffab40'], // row 1 – orange
-    ['#ffd600', '#ffee58'], // row 2 – yellow
-    ['#00c853', '#69f0ae'], // row 3 – green
-    ['#2979ff', '#82b1ff'], // row 4 – blue
-    ['#d500f9', '#ea80fc'], // row 5 – purple
+// Single-character color codes used in level text files
+const TILE_COLORS = {
+    R: ['#ff1744', '#ff6090'],
+    O: ['#ff6d00', '#ffab40'],
+    Y: ['#ffd600', '#ffee58'],
+    G: ['#00c853', '#69f0ae'],
+    B: ['#2979ff', '#82b1ff'],
+    P: ['#d500f9', '#ea80fc'],
+    W: ['#eceff1', '#ffffff'],
+    C: ['#00bcd4', '#80deea'],
+};
+
+// Level files loaded in order from the levels/ subdirectory
+const LEVEL_FILES = [
+    'levels/level1.txt',
+    'levels/level2.txt',
+    'levels/level3.txt',
+    'levels/level4.txt',
+    'levels/level5.txt',
 ];
 
 class ArkanoidGame {
@@ -38,20 +47,26 @@ class ArkanoidGame {
         this.ctx = this.canvas.getContext('2d');
         this.scoreEl = document.getElementById('score');
         this.livesEl = document.getElementById('lives-display');
+        this.levelEl = document.getElementById('level-display');
         this.overlay = document.getElementById('overlay');
         this.overlayTitle = document.getElementById('overlay-title');
         this.overlayMsg = document.getElementById('overlay-msg');
-        document.getElementById('play-again').addEventListener('click', () => this.init());
+        this.btnPlayAgain = document.getElementById('play-again');
+        this.btnNextLevel = document.getElementById('next-level');
 
+        this.btnPlayAgain.addEventListener('click', () => this.init(this._levelIdx));
+        this.btnNextLevel.addEventListener('click', () => this.init((this._levelIdx + 1) % LEVEL_FILES.length));
+
+        this._levelIdx = 0;
         this._bindControls();
-        this.init();
+        this.init(0);
     }
 
-    init() {
+    async init(levelIdx = 0) {
+        this._levelIdx = levelIdx;
         this.score = 0;
         this.lives = LIVES_START;
-        this.tiles = this._makeTiles();
-        this.bonuses = []; // falling bonus drops
+        this.bonuses = [];
         this.paddleX = (360 - PADDLE_NORMAL_W) / 2;
         this.paddleW = PADDLE_NORMAL_W;
         this.paddleTargetW = PADDLE_NORMAL_W;
@@ -60,6 +75,10 @@ class ArkanoidGame {
         this.keys = { left: false, right: false };
         this.movingLeft = false;
         this.movingRight = false;
+
+        this.tiles = await this._loadLevel(levelIdx);
+        this.totalTiles = this.tiles.length;
+
         this._resetBall();
         this._updateHUD();
         this._hideOverlay();
@@ -68,14 +87,58 @@ class ArkanoidGame {
         this._raf = requestAnimationFrame(ts => this._loop(ts));
     }
 
-    _makeTiles() {
+    // ── level loading ──────────────────────────────────────────────────────────
+
+    async _loadLevel(idx) {
+        const url = LEVEL_FILES[idx];
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return this._parseLevelText(await resp.text());
+        } catch (e) {
+            console.warn(`Could not load ${url}: ${e.message}. Falling back to classic layout.`);
+            return this._classicTiles();
+        }
+    }
+
+    // Parse a level text file into an array of tile objects.
+    // Each non-comment line is a row; each character is a column.
+    // See levels/README.txt for the full format description.
+    _parseLevelText(text) {
         const tiles = [];
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
+        const rows = text.split('\n')
+            .map(l => l.replace(/\r$/, ''))
+            .filter(l => !l.startsWith('#') && l.trim() !== '');
+
+        for (let r = 0; r < rows.length; r++) {
+            for (let c = 0; c < rows[r].length; c++) {
+                const ch = rows[r][c].toUpperCase();
+                if (ch === '.' || ch === ' ') continue;
+                if (!TILE_COLORS[ch]) continue;
                 tiles.push({
                     x: TILE_OFF_X + c * (TILE_W + TILE_GAP),
                     y: TILE_OFF_Y + r * (TILE_H + TILE_GAP),
-                    row: r, alive: true, flash: 0
+                    color: ch,
+                    alive: true,
+                    flash: 0,
+                });
+            }
+        }
+        return tiles;
+    }
+
+    // Hardcoded fallback if a level file cannot be fetched
+    _classicTiles() {
+        const rows = ['R', 'O', 'Y', 'G', 'B', 'P'];
+        const tiles = [];
+        for (let r = 0; r < rows.length; r++) {
+            for (let c = 0; c < 10; c++) {
+                tiles.push({
+                    x: TILE_OFF_X + c * (TILE_W + TILE_GAP),
+                    y: TILE_OFF_Y + r * (TILE_H + TILE_GAP),
+                    color: rows[r],
+                    alive: true,
+                    flash: 0,
                 });
             }
         }
@@ -89,7 +152,7 @@ class ArkanoidGame {
         this.ballVX = BALL_BASE_SPEED * Math.cos(angle);
         this.ballVY = BALL_BASE_SPEED * Math.sin(angle);
         this.launched = false;
-        this._readyTimer = 1500; // auto-launch after 1.5s
+        this._readyTimer = 1500;
     }
 
     // ── main loop ──────────────────────────────────────────────────────────────
@@ -103,42 +166,35 @@ class ArkanoidGame {
     }
 
     _update(dt) {
-        // auto-launch countdown
         if (!this.launched) {
             this._readyTimer -= dt;
             if (this._readyTimer <= 0) this.launched = true;
         }
 
-        // paddle width interpolation
         if (this.wideEnd > 0 && Date.now() > this.wideEnd) {
             this.wideEnd = 0;
             this.paddleTargetW = PADDLE_NORMAL_W;
         }
         this.paddleW += (this.paddleTargetW - this.paddleW) * 0.15;
 
-        // paddle movement
-        const moving = this.keys.left || this.movingLeft;
+        const moving  = this.keys.left  || this.movingLeft;
         const movingR = this.keys.right || this.movingRight;
         if (moving)  this.paddleX = Math.max(0, this.paddleX - PADDLE_SPEED);
         if (movingR) this.paddleX = Math.min(360 - this.paddleW, this.paddleX + PADDLE_SPEED);
 
         if (!this.launched) {
-            // ball stays on paddle
             this.ballX = this.paddleX + this.paddleW / 2;
             this.ballY = PADDLE_Y - BALL_R - 2;
             return;
         }
 
-        // move ball
         this.ballX += this.ballVX;
         this.ballY += this.ballVY;
 
-        // wall bounces
-        if (this.ballX - BALL_R < 0) { this.ballX = BALL_R; this.ballVX = Math.abs(this.ballVX); }
+        if (this.ballX - BALL_R < 0)   { this.ballX = BALL_R;       this.ballVX =  Math.abs(this.ballVX); }
         if (this.ballX + BALL_R > 360) { this.ballX = 360 - BALL_R; this.ballVX = -Math.abs(this.ballVX); }
-        if (this.ballY - BALL_R < 0) { this.ballY = BALL_R; this.ballVY = Math.abs(this.ballVY); }
+        if (this.ballY - BALL_R < 0)   { this.ballY = BALL_R;       this.ballVY =  Math.abs(this.ballVY); }
 
-        // paddle collision
         if (
             this.ballVY > 0 &&
             this.ballY + BALL_R >= PADDLE_Y &&
@@ -147,19 +203,15 @@ class ArkanoidGame {
             this.ballX <= this.paddleX + this.paddleW + BALL_R
         ) {
             const hit = (this.ballX - (this.paddleX + this.paddleW / 2)) / (this.paddleW / 2);
-            const maxAngle = 1.1; // radians
-            const angle = hit * maxAngle - Math.PI / 2;
+            const angle = hit * 1.1 - Math.PI / 2;
             const speed = Math.min(Math.hypot(this.ballVX, this.ballVY), BALL_MAX_SPEED);
             this.ballVX = speed * Math.cos(angle);
             this.ballVY = speed * Math.sin(angle);
             this.ballY = PADDLE_Y - BALL_R - 1;
         }
 
-        // tile collisions
-        let aliveBefore = 0;
         for (const t of this.tiles) {
             if (!t.alive) continue;
-            aliveBefore++;
             const closestX = Math.max(t.x, Math.min(this.ballX, t.x + TILE_W));
             const closestY = Math.max(t.y, Math.min(this.ballY, t.y + TILE_H));
             const dx = this.ballX - closestX;
@@ -167,28 +219,26 @@ class ArkanoidGame {
             if (dx * dx + dy * dy > BALL_R * BALL_R) continue;
 
             t.alive = false;
-            t.flash = 6; // frames of flash
+            t.flash = 6;
             this.score += 10;
             this._updateHUD();
             this._bounceTileEdge(t, dx, dy);
             this._maybeDropBonus(t);
         }
 
-        // speed increase every 2 rows cleared (rough approximation by score threshold)
-        const tilesDestroyed = COLS * ROWS - this.tiles.filter(t => t.alive).length;
-        const speedUp = Math.floor(tilesDestroyed / (COLS * 2)) * 0.3;
+        // Gradually speed up the ball as more tiles are cleared
+        const tilesDestroyed = this.totalTiles - this.tiles.filter(t => t.alive).length;
+        const speedUp = Math.floor(tilesDestroyed / 20) * 0.3;
         const currentSpeed = Math.hypot(this.ballVX, this.ballVY);
-        const targetSpeed = Math.min(BALL_BASE_SPEED + speedUp, BALL_MAX_SPEED);
+        const targetSpeed  = Math.min(BALL_BASE_SPEED + speedUp, BALL_MAX_SPEED);
         if (Math.abs(currentSpeed - targetSpeed) > 0.05) {
             const scale = targetSpeed / currentSpeed;
             this.ballVX *= scale;
             this.ballVY *= scale;
         }
 
-        // falling bonuses
         for (const b of this.bonuses) {
             b.y += b.vy;
-            // catch with paddle
             if (
                 b.y + 8 >= PADDLE_Y &&
                 b.y <= PADDLE_Y + PADDLE_H + 8 &&
@@ -202,20 +252,23 @@ class ArkanoidGame {
         }
         this.bonuses = this.bonuses.filter(b => !b.dead);
 
-        // ball lost
         if (this.ballY - BALL_R > 490) {
             this.lives--;
             this._updateHUD();
             if (this.lives <= 0) {
-                this._showOverlay('lose', 'Game Over', `Score: <span>${this.score}</span>`);
+                this._showOverlay('lose', 'Game Over', `Score: <span>${this.score}</span>`, false);
             } else {
                 this._resetBall();
             }
         }
 
-        // win
         if (this.tiles.every(t => !t.alive)) {
-            this._showOverlay('win', 'You Win!', `Score: <span>${this.score}</span>`);
+            const isLast = this._levelIdx === LEVEL_FILES.length - 1;
+            if (isLast) {
+                this._showOverlay('win', 'You Win!', `All levels complete!<br>Score: <span>${this.score}</span>`, false);
+            } else {
+                this._showOverlay('win', `Level ${this._levelIdx + 1} Clear!`, `Score: <span>${this.score}</span>`, true);
+            }
         }
     }
 
@@ -252,7 +305,6 @@ class ArkanoidGame {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, 360, 480);
 
-        // background grid lines (subtle)
         ctx.strokeStyle = '#0f0f22';
         ctx.lineWidth = 1;
         for (let x = 0; x <= 360; x += 30) {
@@ -268,7 +320,6 @@ class ArkanoidGame {
         this._drawBall(ctx);
         this._drawWidebar(ctx);
 
-        // "ready" indicator
         if (!this.launched && this._readyTimer > 0) {
             ctx.fillStyle = '#ffffff44';
             ctx.font = '13px system-ui';
@@ -280,7 +331,7 @@ class ArkanoidGame {
     _drawTiles(ctx) {
         for (const t of this.tiles) {
             if (!t.alive && t.flash <= 0) continue;
-            const [base, light] = t.flash > 0 ? ['#ffffff', '#ffffff'] : TILE_COLORS[t.row];
+            const [base, light] = t.flash > 0 ? ['#ffffff', '#ffffff'] : TILE_COLORS[t.color];
             const alpha = t.flash > 0 ? t.flash / 6 : 1;
             if (t.flash > 0) t.flash--;
 
@@ -293,7 +344,6 @@ class ArkanoidGame {
             ctx.roundRect(t.x, t.y, TILE_W, TILE_H, 3);
             ctx.fill();
 
-            // glow
             ctx.shadowColor = base;
             ctx.shadowBlur = 6;
             ctx.strokeStyle = light;
@@ -313,7 +363,6 @@ class ArkanoidGame {
             ctx.shadowColor = color;
             ctx.shadowBlur = 10;
 
-            // capsule background
             ctx.fillStyle = color + '33';
             ctx.strokeStyle = color;
             ctx.lineWidth = 1.5;
@@ -341,7 +390,6 @@ class ArkanoidGame {
         ctx.save();
         ctx.shadowColor = color;
         ctx.shadowBlur = 14;
-
         const grad = ctx.createLinearGradient(x, PADDLE_Y, x, PADDLE_Y + PADDLE_H);
         grad.addColorStop(0, isWide ? '#ffe57a' : '#80f4ff');
         grad.addColorStop(1, color);
@@ -368,32 +416,32 @@ class ArkanoidGame {
 
     _drawWidebar(ctx) {
         if (this.wideEnd <= 0) return;
-        const remaining = Math.max(0, this.wideEnd - Date.now());
-        const frac = remaining / WIDE_DURATION;
+        const frac = Math.max(0, this.wideEnd - Date.now()) / WIDE_DURATION;
         const barY = PADDLE_Y + PADDLE_H + 4;
-        const barW = 360;
 
         ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(0, barY, barW, 3);
-
-        const grad = ctx.createLinearGradient(0, 0, barW * frac, 0);
+        ctx.fillRect(0, barY, 360, 3);
+        const grad = ctx.createLinearGradient(0, 0, 360 * frac, 0);
         grad.addColorStop(0, '#ffd700');
         grad.addColorStop(1, '#ff6d00');
         ctx.fillStyle = grad;
-        ctx.fillRect(0, barY, barW * frac, 3);
+        ctx.fillRect(0, barY, 360 * frac, 3);
     }
 
     // ── HUD ────────────────────────────────────────────────────────────────────
 
     _updateHUD() {
         this.scoreEl.textContent = this.score;
+        this.levelEl.textContent = this._levelIdx + 1;
         this.livesEl.innerHTML = Array.from({ length: this.lives }, () => '<div class="life-icon"></div>').join('');
     }
 
-    _showOverlay(type, title, msg) {
+    _showOverlay(type, title, msg, showNextLevel) {
         this.overlay.className = `overlay ${type}`;
         this.overlayTitle.textContent = title;
         this.overlayMsg.innerHTML = msg;
+        this.btnNextLevel.style.display = showNextLevel ? '' : 'none';
+        this.btnPlayAgain.textContent   = showNextLevel ? 'Restart' : 'Play Again';
         if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; }
     }
 
@@ -404,7 +452,6 @@ class ArkanoidGame {
     // ── controls ───────────────────────────────────────────────────────────────
 
     _bindControls() {
-        // keyboard
         document.addEventListener('keydown', e => {
             if (e.key === 'ArrowLeft')  this.keys.left  = true;
             if (e.key === 'ArrowRight') this.keys.right = true;
@@ -415,16 +462,13 @@ class ArkanoidGame {
             if (e.key === 'ArrowRight') this.keys.right = false;
         });
 
-        // mouse
         this.canvas.addEventListener('mousemove', e => {
             const rect = this.canvas.getBoundingClientRect();
-            const scaleX = 360 / rect.width;
-            const cx = (e.clientX - rect.left) * scaleX;
+            const cx = (e.clientX - rect.left) * (360 / rect.width);
             this.paddleX = Math.max(0, Math.min(360 - this.paddleW, cx - this.paddleW / 2));
         });
         this.canvas.addEventListener('click', () => { if (!this.launched) this.launched = true; });
 
-        // touch on canvas (tap to launch + swipe to move)
         let touchStartX = null;
         this.canvas.addEventListener('touchstart', e => {
             e.preventDefault();
@@ -435,24 +479,23 @@ class ArkanoidGame {
             e.preventDefault();
             if (touchStartX === null) return;
             const rect = this.canvas.getBoundingClientRect();
-            const scaleX = 360 / rect.width;
-            const cx = (e.touches[0].clientX - rect.left) * scaleX;
+            const cx = (e.touches[0].clientX - rect.left) * (360 / rect.width);
             this.paddleX = Math.max(0, Math.min(360 - this.paddleW, cx - this.paddleW / 2));
         }, { passive: false });
         this.canvas.addEventListener('touchend', () => { touchStartX = null; });
 
-        // mobile buttons
         const btnLeft  = document.getElementById('btn-left');
         const btnRight = document.getElementById('btn-right');
         const setLeft  = v => { this.movingLeft  = v; };
         const setRight = v => { this.movingRight = v; };
+
         btnLeft.addEventListener('touchstart',  e => { e.preventDefault(); setLeft(true);  }, { passive: false });
         btnLeft.addEventListener('touchend',    e => { e.preventDefault(); setLeft(false); }, { passive: false });
         btnLeft.addEventListener('touchcancel', e => { e.preventDefault(); setLeft(false); }, { passive: false });
         btnRight.addEventListener('touchstart',  e => { e.preventDefault(); setRight(true);  }, { passive: false });
         btnRight.addEventListener('touchend',    e => { e.preventDefault(); setRight(false); }, { passive: false });
         btnRight.addEventListener('touchcancel', e => { e.preventDefault(); setRight(false); }, { passive: false });
-        // also mousedown/up for desktop testing of the buttons
+
         btnLeft.addEventListener('mousedown',  () => setLeft(true));
         btnLeft.addEventListener('mouseup',    () => setLeft(false));
         btnLeft.addEventListener('mouseleave', () => setLeft(false));
