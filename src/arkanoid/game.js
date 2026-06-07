@@ -505,4 +505,4 @@ class ArkanoidGame {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => new ArkanoidGame());
+window.addEventListener('DOMContentLoaded', () => { window._arkanoid = new ArkanoidGame(); });
