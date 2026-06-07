@@ -8,7 +8,7 @@ into an `<iframe>`, so new games can be added without touching the others.
 Currently included:
 
 - **2048** — the full game.
-- **Snake** — placeholder ("Coming soon").
+- **Snake** — classic Nokia 3310-style game (keyboard + swipe).
 
 ## Project structure
 
@@ -29,7 +29,11 @@ Currently included:
     │   └── test/
     │       └── test_shell.py   # Playwright UI test for the shell + games
     └── snake/
-        └── index.html  # Placeholder page
+        ├── index.html  # Self-contained Snake page
+        ├── style.css   # Nokia-LCD screen styles
+        ├── game.js     # Snake game logic
+        └── test/
+            └── test_snake.py   # Playwright UI test for Snake
 ```
 
 ### Adding a new game
@@ -63,6 +67,13 @@ With the app running (in another terminal, on port 5099):
 
 ```bash
 uv run --with playwright python src/2048/test/test_shell.py
+```
+
+There is also a per-game test for Snake (start screen, keyboard start, reversal
+guard, pause/resume, wall-collision game over, and Play Again):
+
+```bash
+uv run --with playwright python src/snake/test/test_snake.py
 ```
 
 Override the target URL with the `BASE_URL` environment variable if needed

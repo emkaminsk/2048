@@ -4,39 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Snake</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #faf8ef;
-            color: #776e65;
-            text-align: center;
-            padding: 20px;
-        }
-
-        h1 {
-            font-size: clamp(32px, 10vw, 48px);
-            margin-bottom: 16px;
-        }
-
-        p {
-            font-size: clamp(16px, 5vw, 22px);
-            color: #9f8b77;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Snake</h1>
-    <p>Coming soon…</p>
+    <div class="container">
+        <h1>Snake</h1>
+        <div class="score-container">Score: <span id="score">0</span> &middot; Best: <span id="best">0</span></div>
+        <div class="screen">
+            <canvas id="board" width="340" height="340"></canvas>
+            <div id="message" class="message">
+                <p class="message-title">Snake</p>
+                <p class="message-hint">Press an arrow key or tap to start</p>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="new-game" type="button">New Game</button>
+            <button id="pause" type="button" disabled>Pause</button>
+        </div>
+        <p class="hint">Arrow keys / WASD on desktop &middot; swipe on mobile</p>
+    </div>
+    <div id="game-over-overlay" class="game-over-overlay hidden">
+        <div class="game-over-modal">
+            <h2>Game Over!</h2>
+            <p>Score: <span id="final-score">0</span></p>
+            <button id="play-again" type="button">Play Again</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
 </body>
 </html>

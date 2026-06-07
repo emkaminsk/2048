@@ -1,0 +1,147 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #faf8ef;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    font-size: clamp(32px, 10vw, 48px);
+    margin-bottom: 20px;
+    color: #776e65;
+}
+
+.score-container {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #776e65;
+}
+
+/* Nokia-style LCD screen: a chunky bezel around a greenish panel */
+.screen {
+    position: relative;
+    background-color: #2b3a1f;
+    padding: min(16px, 3.5vw);
+    border-radius: 14px;
+    margin: 0 auto 20px;
+    width: min(420px, calc(100vw - 16px));
+    box-shadow: 0 6px 0 #1c2614, inset 0 0 0 3px #3f5430;
+    touch-action: none;
+}
+
+#board {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    background-color: #aebd8a;
+    border-radius: 4px;
+    /* Keep the retro pixel grid crisp when scaled up */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* Start / pause hint drawn over the screen */
+.message {
+    position: absolute;
+    inset: min(16px, 3.5vw);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    background: rgba(43, 58, 31, 0.72);
+    color: #e8f0d8;
+    border-radius: 4px;
+    padding: 16px;
+}
+
+.message.hidden {
+    display: none;
+}
+
+.message-title {
+    font-size: clamp(22px, 7vw, 32px);
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.message-hint {
+    font-size: clamp(13px, 4vw, 16px);
+    opacity: 0.9;
+}
+
+.controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+button {
+    background-color: #8f7a66;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #9f8b77;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.hint {
+    font-size: 14px;
+    color: #9f8b77;
+}
+
+.game-over-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(238, 228, 218, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.game-over-overlay.hidden {
+    display: none;
+}
+
+.game-over-modal {
+    background: #2b3a1f;
+    padding: 40px;
+    border-radius: 6px;
+    text-align: center;
+    color: #e8f0d8;
+}
+
+.game-over-modal h2 {
+    font-size: clamp(24px, 8vw, 36px);
+    margin-bottom: 16px;
+}
+
+.game-over-modal p {
+    font-size: clamp(16px, 5vw, 24px);
+    margin-bottom: 24px;
+}
