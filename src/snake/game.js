@@ -60,22 +60,25 @@ class SnakeGame {
     }
 
     setupTouchListeners() {
+        // Attach to the .screen container so taps on the message overlay
+        // (which covers the canvas in idle state) are also captured.
+        const screen = this.canvas.closest('.screen');
         let startX = 0;
         let startY = 0;
         let tracking = false;
 
-        this.canvas.addEventListener('touchstart', (e) => {
+        screen.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             tracking = true;
         }, { passive: true });
 
-        this.canvas.addEventListener('touchmove', (e) => {
+        screen.addEventListener('touchmove', (e) => {
             // Keep the page from scrolling while swiping on the board.
             e.preventDefault();
         }, { passive: false });
 
-        this.canvas.addEventListener('touchend', (e) => {
+        screen.addEventListener('touchend', (e) => {
             if (!tracking) return;
             tracking = false;
             const dx = e.changedTouches[0].clientX - startX;
