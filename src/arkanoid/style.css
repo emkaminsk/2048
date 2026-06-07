@@ -70,12 +70,12 @@ canvas {
 
 .mobile-controls button {
     flex: 1;
-    height: 52px;
+    height: 68px;
     background: #1a1a2e;
     border: 1px solid #2a2a4a;
     border-radius: 8px;
     color: #00e5ff;
-    font-size: 1.5rem;
+    font-size: 1.95rem;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
