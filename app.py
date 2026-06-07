@@ -10,9 +10,9 @@ def index():
 def styles():
     return send_file('style.css')
 
-@app.route('/game.js')
-def game():
-    return send_file('game.js')
+@app.route('/shell.js')
+def shell():
+    return send_file('shell.js')
 
 @app.route('/all.min.css')
 def fontawesome_css():
