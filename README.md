@@ -9,6 +9,8 @@ Currently included:
 
 - **2048** — the full game.
 - **Snake** — classic Nokia 3310-style game (keyboard + swipe).
+- **Arkanoid** — brick-breaker with multiple levels, power-ups, and a
+  text-file level-design system (keyboard, mouse, or on-screen buttons).
 
 ## Project structure
 
@@ -28,12 +30,21 @@ Currently included:
     │   ├── game.js     # Game logic
     │   └── test/
     │       └── test_shell.py   # Playwright UI test for the shell + games
-    └── snake/
-        ├── index.html  # Self-contained Snake page
-        ├── style.css   # Nokia-LCD screen styles
-        ├── game.js     # Snake game logic
+    ├── snake/
+    │   ├── index.html  # Self-contained Snake page
+    │   ├── style.css   # Nokia-LCD screen styles
+    │   ├── game.js     # Snake game logic
+    │   └── test/
+    │       └── test_snake.py   # Playwright UI test for Snake
+    └── arkanoid/
+        ├── index.html  # Self-contained Arkanoid page
+        ├── style.css   # Canvas/HUD/overlay/mobile-control styles
+        ├── game.js     # Arkanoid game logic (loads levels from levels/)
+        ├── levels/
+        │   ├── README.txt   # Level text-file format reference
+        │   └── level1..5.txt   # Level layouts (one char per tile)
         └── test/
-            └── test_snake.py   # Playwright UI test for Snake
+            └── test_levels.py   # Level format + Playwright loading tests
 ```
 
 ### Adding a new game
@@ -43,6 +54,36 @@ Currently included:
    `<li><button class="game-link" data-src="/src/<game>/index.html"><Name></button></li>`
 
 The shell handles the rest — no changes to other games required.
+
+## Arkanoid
+
+A classic brick-breaker rendered on an HTML5 `<canvas>`.
+
+- **Controls:** arrow keys or the mouse to move the paddle, **Space** to launch
+  the ball. On touch devices, on-screen left/right buttons are provided.
+- **Goal:** clear every brick to advance to the next level. You start with 3
+  lives; losing the ball costs a life.
+- **Power-ups:** falling bonuses occasionally drop from broken bricks — a
+  **wide paddle** (temporary) and an **extra life**.
+- **HUD:** live score, current level, and remaining lives.
+
+### Designing levels
+
+Levels live in `src/arkanoid/levels/` as plain-text files and are loaded in
+order (`level1.txt`, `level2.txt`, …). Each non-comment line is a row of tiles
+and each character is one column (up to 10 columns):
+
+| Char | Color  | | Char | Color  |
+|------|--------|-|------|--------|
+| `R`  | Red    | | `B`  | Blue   |
+| `O`  | Orange | | `P`  | Purple |
+| `Y`  | Yellow | | `W`  | White  |
+| `G`  | Green  | | `C`  | Cyan   |
+
+A `.` or a space is an empty cell; lines starting with `#` are comments. To add
+a level, drop a new `level*.txt` file in the folder and register it in the
+`LEVEL_FILES` array in `src/arkanoid/game.js`. See
+`src/arkanoid/levels/README.txt` for the full format reference.
 
 ## Local development & testing
 
@@ -74,6 +115,15 @@ guard, pause/resume, wall-collision game over, and Play Again):
 
 ```bash
 uv run --with playwright python src/snake/test/test_snake.py
+```
+
+The Arkanoid test has two phases: it validates every level file's format in
+pure Python (valid tile characters, at least one tile, ≤10 columns), then uses
+Playwright to confirm the live game fetches each level and produces the exact
+tile count the parser expects:
+
+```bash
+uv run --with playwright python src/arkanoid/test/test_levels.py
 ```
 
 Override the target URL with the `BASE_URL` environment variable if needed
