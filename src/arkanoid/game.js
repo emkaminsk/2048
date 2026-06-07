@@ -32,6 +32,17 @@ const TILE_COLORS = {
     C: ['#00bcd4', '#80deea'],
 };
 
+// Special tile types (not plain colors)
+//   S → silver: takes two hits to destroy
+//   X → rock:   indestructible, only bounces the ball
+const SILVER_COLORS     = ['#8d99ae', '#dde3ea']; // [base, light] – full health
+const SILVER_DMG_COLORS = ['#5c6470', '#9aa3b0']; // [base, light] – one hit left
+const ROCK_COLORS       = ['#4e342e', '#7b5e57'];
+const SILVER_HITS         = 2;
+const SCORE_NORMAL        = 10;
+const SCORE_SILVER_HIT    = 5;  // chipping a silver tile
+const SCORE_SILVER_BREAK  = 15; // finishing a silver tile (5 + 15 = 20 total)
+
 // Level files loaded in order from the levels/ subdirectory
 const LEVEL_FILES = [
     'levels/level1.txt',
@@ -39,6 +50,11 @@ const LEVEL_FILES = [
     'levels/level3.txt',
     'levels/level4.txt',
     'levels/level5.txt',
+    'levels/level6.txt',
+    'levels/level7.txt',
+    'levels/level8.txt',
+    'levels/level9.txt',
+    'levels/level10.txt',
 ];
 
 class ArkanoidGame {
@@ -77,7 +93,8 @@ class ArkanoidGame {
         this.movingRight = false;
 
         this.tiles = await this._loadLevel(levelIdx);
-        this.totalTiles = this.tiles.length;
+        // Only destructible tiles count toward the progressive speed-up
+        this.totalTiles = this.tiles.filter(t => t.type !== 'rock').length;
 
         this._resetBall();
         this._updateHUD();
@@ -114,11 +131,16 @@ class ArkanoidGame {
             for (let c = 0; c < rows[r].length; c++) {
                 const ch = rows[r][c].toUpperCase();
                 if (ch === '.' || ch === ' ') continue;
-                if (!TILE_COLORS[ch]) continue;
+                let type = 'normal';
+                if (ch === 'S') type = 'silver';
+                else if (ch === 'X') type = 'rock';
+                else if (!TILE_COLORS[ch]) continue;
                 tiles.push({
                     x: TILE_OFF_X + c * (TILE_W + TILE_GAP),
                     y: TILE_OFF_Y + r * (TILE_H + TILE_GAP),
                     color: ch,
+                    type,
+                    hits: type === 'silver' ? SILVER_HITS : 1,
                     alive: true,
                     flash: 0,
                 });
@@ -137,6 +159,8 @@ class ArkanoidGame {
                     x: TILE_OFF_X + c * (TILE_W + TILE_GAP),
                     y: TILE_OFF_Y + r * (TILE_H + TILE_GAP),
                     color: rows[r],
+                    type: 'normal',
+                    hits: 1,
                     alive: true,
                     flash: 0,
                 });
@@ -218,16 +242,34 @@ class ArkanoidGame {
             const dy = this.ballY - closestY;
             if (dx * dx + dy * dy > BALL_R * BALL_R) continue;
 
+            // Bounce (and eject) first so a surviving tile can't be hit twice
+            // in consecutive frames.
+            this._bounceTileEdge(t, dx, dy);
+
+            if (t.type === 'rock') {
+                // Indestructible: bounce only, no score, no bonus
+                continue;
+            }
+
+            if (t.type === 'silver' && t.hits > 1) {
+                t.hits--;
+                t.flash = 4;
+                this.score += SCORE_SILVER_HIT;
+                this._updateHUD();
+                continue;
+            }
+
+            // Destroyed: a normal tile, or a silver tile on its final hit
             t.alive = false;
             t.flash = 6;
-            this.score += 10;
+            this.score += t.type === 'silver' ? SCORE_SILVER_BREAK : SCORE_NORMAL;
             this._updateHUD();
-            this._bounceTileEdge(t, dx, dy);
             this._maybeDropBonus(t);
         }
 
-        // Gradually speed up the ball as more tiles are cleared
-        const tilesDestroyed = this.totalTiles - this.tiles.filter(t => t.alive).length;
+        // Gradually speed up the ball as more (destructible) tiles are cleared
+        const aliveDestructible = this.tiles.filter(t => t.alive && t.type !== 'rock').length;
+        const tilesDestroyed = this.totalTiles - aliveDestructible;
         const speedUp = Math.floor(tilesDestroyed / 20) * 0.3;
         const currentSpeed = Math.hypot(this.ballVX, this.ballVY);
         const targetSpeed  = Math.min(BALL_BASE_SPEED + speedUp, BALL_MAX_SPEED);
@@ -262,7 +304,8 @@ class ArkanoidGame {
             }
         }
 
-        if (this.tiles.every(t => !t.alive)) {
+        // Level is clear once every destructible tile is gone (rock tiles stay)
+        if (this.tiles.every(t => !t.alive || t.type === 'rock')) {
             const isLast = this._levelIdx === LEVEL_FILES.length - 1;
             if (isLast) {
                 this._showOverlay('win', 'You Win!', `All levels complete!<br>Score: <span>${this.score}</span>`, false);
@@ -273,10 +316,16 @@ class ArkanoidGame {
     }
 
     _bounceTileEdge(t, dx, dy) {
+        // Reverse the velocity component facing the struck edge and push the
+        // ball clear of the tile, so indestructible/silver tiles can't register
+        // repeated hits while the ball overlaps them.
+        const EPS = 0.5;
         if (Math.abs(dx) < Math.abs(dy)) {
-            this.ballVY = dy < 0 ? -Math.abs(this.ballVY) : Math.abs(this.ballVY);
+            if (dy < 0) { this.ballVY = -Math.abs(this.ballVY); this.ballY = t.y - BALL_R - EPS; }
+            else        { this.ballVY =  Math.abs(this.ballVY); this.ballY = t.y + TILE_H + BALL_R + EPS; }
         } else {
-            this.ballVX = dx < 0 ? -Math.abs(this.ballVX) : Math.abs(this.ballVX);
+            if (dx < 0) { this.ballVX = -Math.abs(this.ballVX); this.ballX = t.x - BALL_R - EPS; }
+            else        { this.ballVX =  Math.abs(this.ballVX); this.ballX = t.x + TILE_W + BALL_R + EPS; }
         }
     }
 
@@ -328,11 +377,19 @@ class ArkanoidGame {
         }
     }
 
+    _tileColors(t) {
+        if (t.type === 'rock')   return ROCK_COLORS;
+        if (t.type === 'silver') return t.hits > 1 ? SILVER_COLORS : SILVER_DMG_COLORS;
+        return TILE_COLORS[t.color];
+    }
+
     _drawTiles(ctx) {
         for (const t of this.tiles) {
             if (!t.alive && t.flash <= 0) continue;
-            const [base, light] = t.flash > 0 ? ['#ffffff', '#ffffff'] : TILE_COLORS[t.color];
-            const alpha = t.flash > 0 ? t.flash / 6 : 1;
+            // White flash on a successful hit, except rock (it never breaks)
+            const flashing = t.flash > 0 && t.type !== 'rock';
+            const [base, light] = flashing ? ['#ffffff', '#ffffff'] : this._tileColors(t);
+            const alpha = flashing ? t.flash / 6 : 1;
             if (t.flash > 0) t.flash--;
 
             ctx.globalAlpha = alpha;
@@ -449,13 +506,41 @@ class ArkanoidGame {
         this.overlay.className = 'overlay hidden';
     }
 
+    // ── cheat codes (desktop keyboard only) ─────────────────────────────────────
+
+    // Typing "cheatlevel<N>" jumps straight to level N with a full set of lives.
+    // Keystrokes accumulate in a rolling buffer; a short debounce lets
+    // multi-digit numbers (e.g. "cheatlevel10") finish before we act.
+    _handleCheatKey(e) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.key.length !== 1 || !/[a-z0-9]/i.test(e.key)) return;
+
+        this._cheatBuf = (this._cheatBuf + e.key.toLowerCase()).slice(-20);
+        clearTimeout(this._cheatTimer);
+        this._cheatTimer = setTimeout(() => this._applyCheat(), 350);
+    }
+
+    _applyCheat() {
+        const m = /cheatlevel(\d+)$/.exec(this._cheatBuf);
+        if (!m) return;
+        const lvl = parseInt(m[1], 10);
+        if (lvl >= 1 && lvl <= LEVEL_FILES.length) {
+            this._cheatBuf = '';
+            this.init(lvl - 1); // init() resets lives to LIVES_START (full hearts)
+        }
+    }
+
     // ── controls ───────────────────────────────────────────────────────────────
 
     _bindControls() {
+        this._cheatBuf = '';
+        this._cheatTimer = null;
+
         document.addEventListener('keydown', e => {
             if (e.key === 'ArrowLeft')  this.keys.left  = true;
             if (e.key === 'ArrowRight') this.keys.right = true;
             if (e.key === ' ' && !this.launched) { this.launched = true; e.preventDefault(); }
+            this._handleCheatKey(e); // desktop keyboard cheat codes
         });
         document.addEventListener('keyup', e => {
             if (e.key === 'ArrowLeft')  this.keys.left  = false;

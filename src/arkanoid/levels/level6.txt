@@ -1,0 +1,7 @@
+# Level 6 – Steel Rain
+# Introduces silver tiles (S): each takes two hits to destroy.
+RRRRRRRRRR
+SSSSSSSSSS
+OOOOOOOOOO
+SSSSSSSSSS
+YYYYYYYYYY

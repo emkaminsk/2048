@@ -1,0 +1,8 @@
+# Level 8 – Gates
+# Rock side-pillars guard the flanks; the open centre column keeps every
+# destructible tile reachable from below.
+BBBBBBBBBB
+XYYYYYYYYX
+X.SSSSSS.X
+GGGGGGGGGG
+SSSSSSSSSS

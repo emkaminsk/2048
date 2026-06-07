@@ -1,0 +1,8 @@
+# Level 7 – Rockfall
+# Introduces rock tiles (X): indestructible. The rock row sits at the very
+# top with nothing above it, so it never traps a destructible tile.
+XXXXXXXXXX
+RRRRRRRRRR
+SSSSSSSSSS
+GGGGGGGGGG
+SSSSSSSSSS

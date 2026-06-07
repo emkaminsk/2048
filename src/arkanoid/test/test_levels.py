@@ -4,6 +4,8 @@ Phase 1 – format validation (pure Python, no browser required)
   · Each .txt file in levels/ has valid tile characters.
   · Each level produces at least one tile.
   · No tile column exceeds the 10-column playfield.
+  · Every destructible tile is reachable (rock tiles never make a level
+    unwinnable by boxing in or walling off a destructible tile).
 
 Phase 2 – browser loading (Playwright, requires a running server)
   · LEVEL_FILES in game.js matches the files present on disk.
@@ -22,6 +24,7 @@ Run (from the repo root):
 import glob
 import os
 import re
+from collections import deque
 
 from playwright.sync_api import sync_playwright
 
@@ -32,9 +35,13 @@ LEVELS_DIR = os.path.normpath(os.path.join(_HERE, '..', 'levels'))
 GAME_JS    = os.path.normpath(os.path.join(_HERE, '..', 'game.js'))
 BASE       = os.environ.get('BASE_URL', 'http://127.0.0.1:5099')
 
-# Characters that produce tiles (mirrors TILE_COLORS keys in game.js)
-VALID_CHARS = set('ROYGBPWC')
-MAX_COLS    = 10          # playfield width in columns
+# Characters that produce tiles (mirrors TILE_COLORS keys + special tiles in game.js)
+COLOR_CHARS  = set('ROYGBPWC')   # plain colored tiles (one hit)
+SILVER_CHAR  = 'S'               # two hits
+ROCK_CHAR    = 'X'               # indestructible
+VALID_CHARS  = COLOR_CHARS | {SILVER_CHAR, ROCK_CHAR}
+DESTRUCTIBLE = COLOR_CHARS | {SILVER_CHAR}   # everything the ball can clear
+MAX_COLS     = 10          # playfield width in columns
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +67,55 @@ def parse_level_text(text):
             if ch_up in VALID_CHARS:
                 tiles.append((r, c, ch_up))
     return tiles, rows
+
+
+def unreachable_destructibles(rows):
+    """Return a list of (row, col, char) destructible tiles that no ball could
+    ever reach.
+
+    Model: the ball enters from the open bottom and travels through any cell
+    that is not rock (it can also chew through destructible tiles to open new
+    paths). So the only hard blockers are rock (X) cells. A destructible tile
+    is winnable iff it is connected — through a 4-directional path of non-rock
+    cells — to the open space below the grid. Walls bound the left/right edges.
+    """
+    height = len(rows)
+    width  = MAX_COLS
+
+    def char_at(r, c):
+        if c >= len(rows[r]):
+            return '.'                      # short rows are open on the right
+        return rows[r][c].upper()
+
+    # Flood non-rock cells, seeded from a virtual open row just below the grid.
+    visited = set()
+    queue   = deque()
+    for c in range(width):
+        queue.append((height, c))           # virtual row `height` = open bottom
+        visited.add((height, c))
+
+    while queue:
+        r, c = queue.popleft()
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nr, nc = r + dr, c + dc
+            if nc < 0 or nc >= width:        # left/right walls
+                continue
+            if nr < 0 or nr > height:
+                continue
+            if (nr, nc) in visited:
+                continue
+            if nr < height and char_at(nr, nc) == ROCK_CHAR:
+                continue                     # rock blocks the path
+            visited.add((nr, nc))
+            queue.append((nr, nc))
+
+    unreachable = []
+    for r in range(height):
+        for c in range(len(rows[r])):
+            ch = rows[r][c].upper()
+            if ch in DESTRUCTIBLE and (r, c) not in visited:
+                unreachable.append((r, c, ch))
+    return unreachable
 
 
 def level_names_from_game_js():
@@ -102,7 +158,19 @@ for path, name in level_files:
                 f'unknown character {ch!r} (valid tile chars: {sorted(VALID_CHARS)})'
             )
 
-    print(f'OK  {name:<22} {len(tiles):>3} tiles, {len(rows)} data rows')
+    # At least one destructible tile, else the level can never be cleared
+    destructible = [t for t in tiles if t[2] in DESTRUCTIBLE]
+    assert destructible, f'{name}: no destructible tiles (only rock?) — unwinnable'
+
+    # Rock tiles must never wall off a destructible tile from the ball
+    blocked = unreachable_destructibles(rows)
+    assert not blocked, (
+        f'{name}: {len(blocked)} destructible tile(s) are unreachable behind '
+        f'rock and can never be cleared: {blocked}'
+    )
+
+    print(f'OK  {name:<22} {len(tiles):>3} tiles ({len(destructible)} destructible), '
+          f'{len(rows)} data rows')
 
 print('\nAll level files pass format validation.\n')
 

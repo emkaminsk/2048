@@ -1,0 +1,8 @@
+# Level 10 – The Vault
+# Rock frames the top and sides; the colored core and silver base remain
+# fully reachable through the open bottom corners.
+XXXXXXXXXX
+XRRRRRRRRX
+XOOOOOOOOX
+XSSSSSSSSX
+.GGGGGGGG.

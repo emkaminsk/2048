@@ -61,11 +61,20 @@ A classic brick-breaker rendered on an HTML5 `<canvas>`.
 
 - **Controls:** arrow keys or the mouse to move the paddle, **Space** to launch
   the ball. On touch devices, on-screen left/right buttons are provided.
-- **Goal:** clear every brick to advance to the next level. You start with 3
-  lives; losing the ball costs a life.
+- **Goal:** clear every destructible brick to advance to the next level. You
+  start with 3 lives; losing the ball costs a life.
+- **Tile types:** plain colored bricks break in one hit; **silver** bricks (`S`)
+  take two hits (and are worth more); **rock** bricks (`X`) are indestructible
+  and only deflect the ball.
+- **Difficulty:** levels 1–5 are the warm-up, while the medium levels 6–10
+  introduce silver and rock bricks (rock is never placed so as to make a level
+  impossible to clear).
 - **Power-ups:** falling bonuses occasionally drop from broken bricks — a
   **wide paddle** (temporary) and an **extra life**.
 - **HUD:** live score, current level, and remaining lives.
+- **Cheat code (desktop only):** type `cheatlevel<N>` on the keyboard at any
+  time during play — e.g. `cheatlevel2` or `cheatlevel10` — to jump straight to
+  that level with a full set of lives.
 
 ### Designing levels
 
@@ -80,7 +89,9 @@ and each character is one column (up to 10 columns):
 | `Y`  | Yellow | | `W`  | White  |
 | `G`  | Green  | | `C`  | Cyan   |
 
-A `.` or a space is an empty cell; lines starting with `#` are comments. To add
+Two special tiles are also available: `S` (silver — two hits to destroy) and
+`X` (rock — indestructible). A `.` or a space is an empty cell; lines starting
+with `#` are comments. To add
 a level, drop a new `level*.txt` file in the folder and register it in the
 `LEVEL_FILES` array in `src/arkanoid/game.js`. See
 `src/arkanoid/levels/README.txt` for the full format reference.
@@ -118,9 +129,10 @@ uv run --with playwright python src/snake/test/test_snake.py
 ```
 
 The Arkanoid test has two phases: it validates every level file's format in
-pure Python (valid tile characters, at least one tile, ≤10 columns), then uses
-Playwright to confirm the live game fetches each level and produces the exact
-tile count the parser expects:
+pure Python (valid tile characters, at least one destructible tile, ≤10
+columns, and that no rock tile walls off a destructible tile to make the level
+unwinnable), then uses Playwright to confirm the live game fetches each level
+and produces the exact tile count the parser expects:
 
 ```bash
 uv run --with playwright python src/arkanoid/test/test_levels.py
