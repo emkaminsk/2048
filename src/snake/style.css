@@ -83,6 +83,54 @@ h1 {
     opacity: 0.9;
 }
 
+/* D-pad: shown only on touch-primary devices */
+.dpad {
+    display: none;
+    grid-template-areas:
+        ". up ."
+        "left down right";
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(2, 60px);
+    gap: 8px;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .dpad {
+        display: grid;
+    }
+}
+
+.dpad-btn {
+    width: 60px;
+    height: 60px;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #8f7a66;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#dpad-up    { grid-area: up; }
+#dpad-left  { grid-area: left; }
+#dpad-down  { grid-area: down; }
+#dpad-right { grid-area: right; }
+
+.dpad-btn:active {
+    background-color: #776e65;
+    transform: scale(0.92);
+}
+
 .controls {
     display: flex;
     gap: 12px;

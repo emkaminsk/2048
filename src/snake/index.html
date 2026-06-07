@@ -17,11 +17,17 @@
                 <p class="message-hint">Press an arrow key or tap to start</p>
             </div>
         </div>
+        <div class="dpad">
+            <button class="dpad-btn" id="dpad-up"    type="button" aria-label="Up">↑</button>
+            <button class="dpad-btn" id="dpad-left"  type="button" aria-label="Left">←</button>
+            <button class="dpad-btn" id="dpad-down"  type="button" aria-label="Down">↓</button>
+            <button class="dpad-btn" id="dpad-right" type="button" aria-label="Right">→</button>
+        </div>
         <div class="controls">
             <button id="new-game" type="button">New Game</button>
             <button id="pause" type="button" disabled>Pause</button>
         </div>
-        <p class="hint">Arrow keys / WASD on desktop &middot; swipe on mobile</p>
+        <p class="hint">Arrow keys / WASD on desktop &middot; swipe or tap controls on mobile</p>
     </div>
     <div id="game-over-overlay" class="game-over-overlay hidden">
         <div class="game-over-modal">

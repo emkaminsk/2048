@@ -57,6 +57,7 @@ class SnakeGame {
             this.start({ x: 1, y: 0 });
         });
         this.setupTouchListeners();
+        this.setupDpadListeners();
     }
 
     setupTouchListeners() {
@@ -96,6 +97,24 @@ class SnakeGame {
                 this.queueDirection(dy > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 });
             }
         }, { passive: true });
+    }
+
+    setupDpadListeners() {
+        const dirs = {
+            'dpad-up':    { x: 0, y: -1 },
+            'dpad-down':  { x: 0, y: 1 },
+            'dpad-left':  { x: -1, y: 0 },
+            'dpad-right': { x: 1, y: 0 },
+        };
+        for (const [id, dir] of Object.entries(dirs)) {
+            const btn = document.getElementById(id);
+            if (!btn) continue;
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                if (this.state === 'idle') this.start(dir);
+                else this.queueDirection(dir);
+            });
+        }
     }
 
     handleKey(e) {
