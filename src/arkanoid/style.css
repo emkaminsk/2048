@@ -35,6 +35,9 @@ h1 {
 .hud-score { color: #e0e0f0; }
 .hud-score span { color: #00e5ff; font-weight: 700; }
 
+.hud-level { color: #aaaacc; }
+.hud-level span { color: #ffd700; font-weight: 700; }
+
 .hud-lives { display: flex; gap: 5px; align-items: center; }
 .life-icon {
     width: 10px; height: 10px;

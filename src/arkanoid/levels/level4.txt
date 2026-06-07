@@ -1,0 +1,9 @@
+# Level 4 – Fortress
+# Thick outer walls guard an inner keep
+BBBBBBBBBB
+B........B
+B.RRRRRR.B
+B.R....R.B
+B.RRRRRR.B
+B........B
+BBBBBBBBBB

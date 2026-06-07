@@ -1,0 +1,9 @@
+# Level 2 – Diamond
+# A nested diamond – gaps make it tricky
+....RR....
+..ROOOOR..
+.ROYYYYOR.
+ROYYYYYYOR
+.ROYYYYOR.
+..ROOOOR..
+....RR....

@@ -1,0 +1,8 @@
+# Level 1 – Classic
+# The traditional Arkanoid rainbow grid
+RRRRRRRRRR
+OOOOOOOOOO
+YYYYYYYYYY
+GGGGGGGGGG
+BBBBBBBBBB
+PPPPPPPPPP
