@@ -14,8 +14,8 @@ const PADDLE_NORMAL_W = 80;
 const PADDLE_WIDE_W = 160;
 const PADDLE_SPEED = 5;
 const BALL_R = 7;
-const BALL_BASE_SPEED = 4;
-const BALL_MAX_SPEED = 8;
+const BALL_BASE_SPEED = 4.4;
+const BALL_MAX_SPEED = 8.8;
 const WIDE_DURATION = 30000; // ms
 const LIVES_START = 3;
 
